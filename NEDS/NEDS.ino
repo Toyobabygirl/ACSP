@@ -13,9 +13,20 @@ char keys[ROWS][COLS] {
 byte rowPins[ROWS]{4, 5, 6},
 byte colPins[COLS]{2, 5, 8, 0}
 
-void setup() {
-  // put your setup code here, to run once:
+String enterCode = "";
+String correctCode = "1234";
+String adminCode = "0000";
+int attemptCount = 0;
+bool systemLocked = false;
 
+void setup() {
+  lcd.init();
+  lcd.backlight();
+  lcd.clear();
+  lcd.print("Enter Code:");
+
+  pinMode(relayPin, OUTPUT);
+  digitalWrite(relayPin, LOW); // Door locked
 }
 
 void loop() {
