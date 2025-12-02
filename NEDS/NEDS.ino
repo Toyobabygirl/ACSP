@@ -1,133 +1,225 @@
+#include <Wire.h>
 #include <LiquidCrystal_I2C.h>
-#include <Keypad.h>
 
-LiquidCrystal_I2C lcd(0x3F, 16, 2); // Change 0x3F to 0x27 if your LCD uses that address
+// ---------------- LCD ----------------
+LiquidCrystal_I2C lcd(0x27, 16, 2);   // Change to 0x3F if needed
 
-// Keypad setup
-const byte ROWS = 4;
-const byte COLS = 3;
+// ---------------- KEYPAD ----------------
+int rows[4] = {2, 3, 4, 5};
+int cols[3] = {6, 7, 8};
 
- char keys[ROWS][COLS] = {
-   {'1', '2', '3'},
-   {'4', '5', '6'},
-   {'7', '8', '9'},
-   {'*', '0', '#'}
- };
+char keys[4][3] = {
+  {'1','2','3'},
+  {'4','5','6'},
+  {'7','8','9'},
+  {'*','0','#'}
+};
 
- byte rowPins[ROWS] = {9, 8, 7, 6};
- byte colPins[COLS] = {5, 4, 3};
+// ----------- MODES ------------
+enum Mode { PASSWORD_MODE, AUTO_MODE, MANUAL_MODE, ADMIN_MODE, LOCKED_MODE };
+Mode currentMode = PASSWORD_MODE;
 
-Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+// Interrupt flag
+volatile bool taskFlag = false;
 
-// System variables
-String enteredCode = "";
-String correctCode = "1234";
+// ---------------- INTERRUPT ----------------
+ISR(TIMER1_COMPA_vect) {
+  taskFlag = true;
+}
+
+// ---------------- PASSWORD SYSTEM VARIABLES ----------------
+String enteredPassword = "";
+String correctPassword = "0000";
+int wrongAttempts = 0;
+
+String adminEntered = "";
 String adminCode = "4251";
-int attemptCount = 0;
-bool systemLocked = false;
 
+// ---------------- KEYPAD FUNCTION ----------------
+char getKey() {
+  for (int r = 0; r < 4; r++) {
+    digitalWrite(rows[r], LOW);
+
+    for (int c = 0; c < 3; c++) {
+      if (digitalRead(cols[c]) == LOW) {
+        delay(20);
+        if (digitalRead(cols[c]) == LOW) {
+          char key = keys[r][c];
+          while (digitalRead(cols[c]) == LOW);
+          digitalWrite(rows[r], HIGH);
+          return key;
+        }
+      }
+    }
+
+    digitalWrite(rows[r], HIGH);
+  }
+
+  return ' ';
+}
+
+void resetSystem() {
+  wrongAttempts = 0;
+  enteredPassword = "";
+  currentMode = PASSWORD_MODE;
+
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Enter Password:");
+}
+
+// ---------------- SETUP ----------------
 void setup() {
   lcd.init();
   lcd.backlight();
-  lcd.clear();
-  lcd.print("Enter Code:");
+
+  // keypad pins
+  for (int i = 0; i < 4; i++) {
+    pinMode(rows[i], OUTPUT);
+    digitalWrite(rows[i], HIGH);
+  }
+  for (int i = 0; i < 3; i++) {
+    pinMode(cols[i], INPUT_PULLUP);
+  }
+
+  // timer interrupt
+  cli();
+  TCCR1A = 0;
+  TCCR1B = 0;
+  OCR1A = 15624;
+  TCCR1B |= (1 << WGM12);
+  TCCR1B |= (1 << CS12) | (1 << CS10);
+  TIMSK1 |= (1 << OCIE1A);
+  sei();
+
+  lcd.setCursor(0,0);
+  lcd.print("Enter Password:");
 }
+
+// ---------------- MAIN LOOP ----------------
+int autoCounter = 0;
 
 void loop() {
-  auto key = keypad.getKey();
 
-  if (key) {
-    switch (key) {
-      case '*': // Clear
-        enteredCode = "";
-        lcd.clear();
-        lcd.print("Enter Code:");
-        break;
+  char k = getKey();
 
-      case '#': // Enter
-        if (systemLocked) {
-          checkUserCode();
-        } else {
-          checkAdminCode();
-        }
-        break;
+  // ==========================
+  //  PASSWORD ENTRY MODE
+  // ==========================
+  if (currentMode == PASSWORD_MODE) {
 
-      default: // Numbers
-        if (key) {
-       
-          if (enteredCode.length() < 4) {
-            enteredCode += key;
-            displayCode();
-          } else {
-            lcd.setCursor(0, 1);
-            lcd.print("Max 4 digits");
-            delay(800);
-            displayCode(); // return to normal display
+    if (k >= '0' && k <= '9') {
+      if (enteredPassword.length() < 4) {
+        enteredPassword += k;
+
+        lcd.setCursor(0,1);
+        lcd.print(String(enteredPassword.length(), '*'));
+      }
+
+      if (enteredPassword.length() == 4) {
+        if (enteredPassword == correctPassword) {
+          lcd.clear();
+          lcd.setCursor(0,0);
+          lcd.print("Access Granted");
+          delay(2000);
+
+          enteredPassword = "";
+          lcd.clear();
+          lcd.print("Mode: MANUAL");
+          currentMode = MANUAL_MODE;
+        } 
+        else {
+          wrongAttempts++;
+          lcd.clear();
+          lcd.print("Incorrect Pass");
+          delay(2000);
+
+          if (wrongAttempts >= 3) {
+            currentMode = LOCKED_MODE;
+            lcd.clear();
+            lcd.print("SYSTEM LOCKED");
+            delay(2000);
+            lcd.clear();
+            lcd.print("Enter Admin:");
           }
+
+          enteredPassword = "";
+          resetSystem();
         }
-        break;
+      }
+    }
+
+    return;
+  }
+
+  // ==========================
+  //  LOCKED MODE → ADMIN CODE
+  // ==========================
+  if (currentMode == LOCKED_MODE) {
+
+    if (k >= '0' && k <= '9') {
+      adminEntered += k;
+
+      lcd.setCursor(0,1);
+      lcd.print(String(adminEntered.length(), '*'));
+
+      if (adminEntered.length() == 4) {
+        if (adminEntered == adminCode) {
+          lcd.clear();
+          lcd.print("Admin Correct!");
+          delay(2000);
+
+          adminEntered = "";
+          resetSystem();
+          currentMode = PASSWORD_MODE;
+        } 
+        else {
+          lcd.clear();
+          lcd.print("Wrong Admin");
+          delay(2000);
+
+          adminEntered = "";
+          lcd.clear();
+          lcd.print("Enter Admin:");
+        }
+      }
+    }
+
+    return;
+  }
+
+  // ==========================
+  //  MANUAL MODE (Normal Keypad Use)
+  // ==========================
+  if (currentMode == MANUAL_MODE) {
+
+    if (k == '#') {
+      currentMode = AUTO_MODE;
+      lcd.clear();
+      lcd.print("Mode: AUTO");
+      return;
+    }
+
+    if (k != ' ' && k != '#') {
+      lcd.clear();
+      lcd.print("Pressed:");
+      lcd.setCursor(0,1);
+      lcd.print(k);
     }
   }
-}
 
-// Display * for each digit
-void displayCode() {
-  lcd.clear();
-  lcd.print("Code: ");
-  for (auto i = 0; i < enteredCode.length(); i++) {
-    lcd.print("*");
+  // ==========================
+  //  AUTO MODE (Interrupt every 1 sec)
+  // ==========================
+  if (currentMode == AUTO_MODE && taskFlag) {
+    taskFlag = false;
+
+    lcd.clear();
+    lcd.print("AUTO Running");
+    lcd.setCursor(0,1);
+    lcd.print("Count: ");
+    lcd.print(autoCounter++);
+
+    if (autoCounter > 9999) autoCounter = 0;
   }
-}
-
-// Check user’s entered code
-void checkUserCode() {
-  if (enteredCode == correctCode) {
-    lcd.clear();
-    lcd.print("Access Granted");
-    delay(3000);
-    resetSystem();
-  } else {
-    attemptCount++;
-    lcd.clear();
-    lcd.print("Wrong Code");
-    delay(1000);
-
-    if (attemptCount >= 3) {
-      systemLocked = true;
-      lcd.clear();
-      lcd.print("System Locked");
-      lcd.setCursor(0, 1);
-      lcd.print("Enter Admin Code");
-    } else {
-      lcd.clear();
-      lcd.print("Try Again");
-    }
-    enteredCode = "";
-  }
-}
-
-// Check admin code
-void checkAdminCode() {
-  if (enteredCode == adminCode) {
-    lcd.clear();
-    lcd.print("Admin Access");
-    delay(1000);
-    resetSystem();
-  } else {
-    lcd.clear();
-    lcd.print("Invalid Admin");
-    delay(1000);
-    lcd.clear();
-    lcd.print("Enter Admin Code");
-    enteredCode = "";
-  }
-}
-
-// Reset system
-void resetSystem() {
-  attemptCount = 0;
-  systemLocked = false;
-  enteredCode = "";
-  lcd.clear();
-  lcd.print("Enter Code:");
 }
