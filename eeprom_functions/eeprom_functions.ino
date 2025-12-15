@@ -1,15 +1,15 @@
 #include "EEPROM_DATA.h"
 
-SystemData data;
+SystemData data; //stores system
 
 void loadSystemData() {
-  EEPROM.get(0, data);
+  EEPROM.get(0, data); //read system
 
   if (strlen(data.userPassword) != 4) strcpy(data.userPassword, "0000");
   if (strlen(data.adminPassword) != 4) strcpy(data.adminPassword, "4251");
 
-  if (data.systemMode > 5) data.systemMode = 0;
-  if (data.wrongAttempts > 10) data.wrongAttempts = 0;
+  if (data.systemMode > 5) data.systemMode = 0;// Reset invalid system mode
+  if (data.wrongAttempts > 10) data.wrongAttempts = 0;// Reset wrong attempts
 
   EEPROM.put(0, data);
 }
