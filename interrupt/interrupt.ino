@@ -10,7 +10,7 @@ void timerISR() {
 
 void setupInterrupt() {
 <<<<<<< HEAD
-  Timer1.initialize(50000);       // Set timer interval (50 ms)
+  Timer1.initialize(time);       // Set timer interval (50 ms)
 =======
   Timer1.initialize(time);       // Set timer interval (50 ms)
 >>>>>>> dc33c52 (I removed the magic fig and merged the eeprom files)
