@@ -2,15 +2,9 @@
 #include <TimerOne.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
-<<<<<<< HEAD
-#include "EEPROM_DATA.h"   // <-- VERY IMPORTANT, defines SystemData structure
+#include "EEPROM_DATA.h"  // <-- VERY IMPORTANT
 
-LiquidCrystal_I2C lcd(0x3F, 16, 2); // Initialize I2C LCD
-=======
-#include "EEPROM_DATA.h"  // <-- VERY IMPORTANT, defines SystemData structure
-
-LiquidCrystal_I2C lcd(0x3F, 16, 2);  // Initialize I2C LCD
->>>>>>> dc33c52 (I removed the magic fig and merged the eeprom files)
+LiquidCrystal_I2C lcd(0x3F, 16, 2);
 
 enum Mode {
   PASSWORD_MODE,
@@ -19,48 +13,19 @@ enum Mode {
   SUCCESS_MODE
 };
 
-<<<<<<< HEAD
-Mode currentMode;                   // Tracks current system mode
-extern volatile bool interruptFlag; // Flag set by timer interrupt
-=======
-Mode currentMode;                    // Tracks current system mode
-extern volatile bool interruptFlag;  // Flag set by timer interrupt
->>>>>>> dc33c52 (I removed the magic fig and merged the eeprom files)
+Mode currentMode;
+
+extern volatile bool interruptFlag;
 
 void setup() {
   lcd.init();
   lcd.backlight();
 
-<<<<<<< HEAD
-  loadSystemData();   // Load saved passwords and settings from EEPROM
+  loadSystemData();  // load from EEPROM
 
-  currentMode = (Mode)data.systemMode; // Set current mode from saved data
+  currentMode = (Mode)data.systemMode;
 
-  switch(currentMode) { // Show appropriate prompt or message
-    case PASSWORD_MODE: askPassword(); break;
-    case ADMIN_MODE:    askAdmin(); break;
-    case LOCKED_MODE:   lcd.print("SYSTEM LOCKED"); break;
-    case SUCCESS_MODE:  lcd.print("WELCOME BACK"); break;
-  }
-
-  setupKeypadPins(); // Configure keypad pins
-  setupInterrupt();  // Start timer interrupt
-}
-
-void loop() {
-  if (!interruptFlag) return; // Wait until timer triggers
-  interruptFlag = false;
-
-  char k = getKey();         // Read keypad input
-  if (k == ' ') return;      // No key pressed
-
-  switch(currentMode) {      // Handle input based on current mode
-=======
-  loadSystemData();  // Load saved passwords and settings from EEPROM
-
-  currentMode = (Mode)data.systemMode;  // Set current mode from saved data
-
-  switch (currentMode) {  // Show appropriate prompt or message
+  switch (currentMode) {
     case PASSWORD_MODE:
       askPassword();
       break;
@@ -75,19 +40,18 @@ void loop() {
       break;
   }
 
-  setupKeypadPins();  // Configure keypad pins
-  setupInterrupt();   // Start timer interrupt
+  setupKeypadPins();
+  setupInterrupt();
 }
 
 void loop() {
-  if (!interruptFlag) return;  // Wait until timer triggers
+  if (!interruptFlag) return;
   interruptFlag = false;
 
-  char k = getKey();     // Read keypad input
-  if (k == ' ') return;  // No key pressed
+  char k = getKey();
+  if (k == ' ') return;
 
-  switch (currentMode) {  // Handle input based on current mode
->>>>>>> dc33c52 (I removed the magic fig and merged the eeprom files)
+  switch (currentMode) {
     case PASSWORD_MODE:
       handlePasswordMode(k);
       break;
