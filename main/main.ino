@@ -4,7 +4,10 @@
 #include <LiquidCrystal_I2C.h>
 #include "EEPROM_DATA.h"  // <-- VERY IMPORTANT
 
-LiquidCrystal_I2C lcd(0x3F, 16, 2);
+const int column = 2;
+const int rows = 16;
+
+LiquidCrystal_I2C lcd(0x3F, rows, column);
 
 enum Mode {
   PASSWORD_MODE,
@@ -46,7 +49,7 @@ void setup() {
 
 void loop() {
   if (!interruptFlag) return;
-  interruptFlag = false;
+  interruptFlag = flag;
 
   char k = getKey();
   if (k == ' ') return;

@@ -1,3 +1,6 @@
+const int ModeTime = 1500; 
+const int WrongAttempt = 0;
+const int wrongAttempts= 3;
 String userInput = "";   // Stores user password input
 String adminInput = "";  // Stores admin code input
 
@@ -20,10 +23,10 @@ void handlePasswordMode(char k) {
       lcd.print("Access Granted");
 
       data.systemMode = SUCCESS_MODE;
-      data.wrongAttempts = 0;
+      data.wrongAttempts = WrongAttempt;
       saveSystemData();          // Save success state
 
-      delay(1500);
+      delay(ModeTime);
       askPassword();
       userInput = "";
     }
@@ -33,9 +36,9 @@ void handlePasswordMode(char k) {
 
       lcd.clear();
       lcd.print("Wrong Password");
-      delay(1500);
+      delay(ModeTime);
 
-      if (data.wrongAttempts >= 3) {
+      if (data.wrongAttempts >= wrongAttempts) {
         data.systemMode = ADMIN_MODE; // Switch to admin mode
         saveSystemData();
         askAdmin();
@@ -66,16 +69,16 @@ void handleAdminMode(char k) {
       lcd.print("Admin OK");
 
       data.systemMode = PASSWORD_MODE; // Reset to normal mode
-      data.wrongAttempts = 0;
+      data.wrongAttempts = WrongAttempt;
       saveSystemData();
 
-      delay(1500);
+      delay(ModeTime);
       askPassword();
       adminInput = "";
     } else {
       lcd.clear();
       lcd.print("Wrong Admin");
-      delay(1500);
+      delay(ModeTime);
       adminInput = "";
       askAdmin();
     }

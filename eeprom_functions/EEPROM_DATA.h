@@ -2,10 +2,10 @@
 #define EEPROM_DATA_H
 
 #include <EEPROM.h>
-
+const int passwordbyte = 5;
 struct SystemData {
-  char userPassword[5];
-  char adminPassword[5];
+  char userPassword[passwordbyte];
+  char adminPassword[passwordbyte];
   byte systemMode;
   byte wrongAttempts;
 };
