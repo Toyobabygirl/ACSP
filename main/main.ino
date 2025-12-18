@@ -17,7 +17,8 @@ char getKey();
 // LCD configuration
 const int columns = 16;
 const int rows = 2;
-LiquidCrystal_I2C lcd(0x3F, columns, rows);
+const int I2c_ADDRESS = 0x3F;
+LiquidCrystal_I2C lcd(I2c_ADDRESS, columns, rows);
 
 // System modes
 enum Mode { 
