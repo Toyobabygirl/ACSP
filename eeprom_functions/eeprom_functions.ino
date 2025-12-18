@@ -17,13 +17,13 @@ void loadSystemData() {
     // Initialize user password if invalid
     if (strlen(data.userPassword) != userPasswordLength) {
         strncpy(data.userPassword, "0000", userPasswordLength);
-        data.userPassword[userPasswordLength] = '\0';
+        
     }
 
     // Initialize admin password if invalid
     if (strlen(data.adminPassword) != userAdminLength) {
         strncpy(data.adminPassword, "4251", userAdminLength);
-        data.adminPassword[userAdminLength] = '\0';
+     
     }
 
     // Initialize wrongAttempts if corrupted
@@ -31,10 +31,7 @@ void loadSystemData() {
         data.wrongAttempts = minWrongAttemptt;
     }
 
-    // Initialize systemMode if invalid
-    if (data.systemMode > SUCCESS_MODE) {
-        data.systemMode = PASSWORD_MODE;
-    }
+    
 }
 
 // ---------------- Save Data to EEPROM ----------------
