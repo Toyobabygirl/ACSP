@@ -3,18 +3,9 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include "EEPROM_DATA.h"  // <-- VERY IMPORTANT
+#include "mode.h"
 
-// ---------- FUNCTION PROTOTYPES ----------
-void askPassword();
-void askAdmin();
-void handlePasswordMode(char k);
-void handleAdminMode(char k);
-void setupKeypadPins();
-void setupInterrupt();
-char getKey();
-// ----------------------------------------
-
-// LCD configuration
+// LCD
 const int columns = 16;
 const int rows = 2;
 const int I2c_ADDRESS = 0x3F;
