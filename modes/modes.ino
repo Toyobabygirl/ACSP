@@ -1,4 +1,4 @@
-#include "mode.h"
+#include "made.h"
 const int ModeTime = 1500; 
 const int minWrongAttempt = 0;
 const int maxwrongAttempts= 3;

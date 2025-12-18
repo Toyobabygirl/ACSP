@@ -3,12 +3,13 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include "EEPROM_DATA.h"  // <-- VERY IMPORTANT
-#include "mode.h"
+#include "made.h"
 
 // LCD
 const int columns = 16;
 const int rows = 2;
 const int I2c_ADDRESS = 0x3F;
+const int delay = 2000;
 LiquidCrystal_I2C lcd(I2c_ADDRESS, columns, rows);
 
 // System modes
@@ -46,7 +47,7 @@ void setup() {
       break;
     case SUCCESS_MODE:
       lcd.print("WELCOME BACK");  // temporary display if system was saved as SUCCESS
-      delay(2000);                // optional short display
+      delay(delay);                // optional short display
       currentMode = PASSWORD_MODE;
       data.systemMode = currentMode;
       saveSystemData();
