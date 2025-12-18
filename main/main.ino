@@ -4,30 +4,44 @@
 #include <LiquidCrystal_I2C.h>
 #include "EEPROM_DATA.h"  // <-- VERY IMPORTANT
 
-const int column = 2;
-const int rows = 16;
+// ---------- FUNCTION PROTOTYPES ----------
+void askPassword();
+void askAdmin();
+void handlePasswordMode(char k);
+void handleAdminMode(char k);
+void setupKeypadPins();
+void setupInterrupt();
+char getKey();
+// ----------------------------------------
 
-LiquidCrystal_I2C lcd(0x3F, rows, column);
+// LCD configuration
+const int columns = 16;
+const int rows = 2;
+LiquidCrystal_I2C lcd(0x3F, columns, rows);
 
-enum Mode {
-  PASSWORD_MODE,
-  ADMIN_MODE,
-  LOCKED_MODE,
-  SUCCESS_MODE
-};
-
+// System modes
+enum Mode { 
+            PASSWORD_MODE,
+            ADMIN_MODE,
+            LOCKED_MODE,
+            SUCCESS_MODE
+ };
 Mode currentMode;
 
+// Interrupt flag (defined elsewhere)
 extern volatile bool interruptFlag;
 
 void setup() {
   lcd.init();
   lcd.backlight();
 
-  loadSystemData();  // load from EEPROM
+  loadSystemData();  // load EEPROM data
 
+  // Ensure mode is valid
+  if (data.systemMode > SUCCESS_MODE) data.systemMode = PASSWORD_MODE;
   currentMode = (Mode)data.systemMode;
 
+  lcd.clear();
   switch (currentMode) {
     case PASSWORD_MODE:
       askPassword();
@@ -39,7 +53,13 @@ void setup() {
       lcd.print("SYSTEM LOCKED");
       break;
     case SUCCESS_MODE:
-      lcd.print("WELCOME BACK");
+      lcd.print("WELCOME BACK");  // temporary display if system was saved as SUCCESS
+      delay(2000);                // optional short display
+      currentMode = PASSWORD_MODE;
+      data.systemMode = currentMode;
+      saveSystemData();
+      lcd.clear();
+      askPassword();
       break;
   }
 
@@ -49,10 +69,10 @@ void setup() {
 
 void loop() {
   if (!interruptFlag) return;
-  interruptFlag = flag;
+  interruptFlag = false;  // reset the flag
 
   char k = getKey();
-  if (k == ' ') return;
+  if (k == ' ') return;  // no key pressed
 
   switch (currentMode) {
     case PASSWORD_MODE:
@@ -61,6 +81,18 @@ void loop() {
 
     case ADMIN_MODE:
       handleAdminMode(k);
+      break;
+
+    case SUCCESS_MODE:
+      // After showing ACCESS GRANTED, go back to password mode
+      currentMode = PASSWORD_MODE;
+      data.systemMode = currentMode;
+      saveSystemData();
+      lcd.clear();
+      askPassword();
+      break;
+
+    default:
       break;
   }
 }

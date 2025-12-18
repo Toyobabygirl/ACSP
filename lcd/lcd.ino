@@ -1,3 +1,4 @@
+
 void showStars(int count) {
   lcd.setCursor(0,1);        // Move cursor to second line
   for (int i=0; i<count; i++) lcd.print("*"); // Display '*' for each entered character

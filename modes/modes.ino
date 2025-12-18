@@ -1,6 +1,7 @@
 const int ModeTime = 1500; 
-const int WrongAttempt = 0;
-const int wrongAttempts= 3;
+const int minWrongAttempt = 0;
+const int maxwrongAttempts= 3;
+
 String userInput = "";   // Stores user password input
 String adminInput = "";  // Stores admin code input
 
@@ -23,7 +24,7 @@ void handlePasswordMode(char k) {
       lcd.print("Access Granted");
 
       data.systemMode = SUCCESS_MODE;
-      data.wrongAttempts = WrongAttempt;
+      data.wrongAttempts = minWrongAttempt;
       saveSystemData();          // Save success state
 
       delay(ModeTime);
@@ -38,7 +39,7 @@ void handlePasswordMode(char k) {
       lcd.print("Wrong Password");
       delay(ModeTime);
 
-      if (data.wrongAttempts >= wrongAttempts) {
+      if (data.wrongAttempts >= maxwrongAttempts) {
         data.systemMode = ADMIN_MODE; // Switch to admin mode
         saveSystemData();
         askAdmin();
@@ -69,7 +70,7 @@ void handleAdminMode(char k) {
       lcd.print("Admin OK");
 
       data.systemMode = PASSWORD_MODE; // Reset to normal mode
-      data.wrongAttempts = WrongAttempt;
+      data.wrongAttempts = minWrongAttempt;
       saveSystemData();
 
       delay(ModeTime);
